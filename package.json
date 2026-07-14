@@ -1,0 +1,24 @@
+{
+  "name": "humanize-code",
+  "version": "1.0.0",
+  "description": "A Claude Code skill that strips AI-tells from code so it reads as human-authored.",
+  "license": "MIT",
+  "author": "avi-dev-user",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avi-dev-user/humanize-code.git"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "skill",
+    "ai-code",
+    "code-review",
+    "code-smells",
+    "ai-slop"
+  ],
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "type": "module"
+}
