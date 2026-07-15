@@ -1,24 +1,27 @@
 // Structural validator for the humanize-code skill. No LLM needed.
 // Exports pure check functions; run directly (`node scripts/validate.mjs`) for a CLI report.
+// Every check takes an optional repo root so tests can point it at a fixture repo.
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
-import { join, dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, dirname, resolve, extname, relative } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-// Forbidden "AI punctuation", declared by code point so this source file stays clean itself.
+// Forbidden "AI punctuation", by code point so this source stays free of the glyphs it hunts.
 const FORBIDDEN = {
-  "em-dash": "—",
-  "en-dash": "–",
-  "ellipsis": "…",
-  "left-single-quote": "‘",
-  "right-single-quote": "’",
-  "left-double-quote": "“",
-  "right-double-quote": "”",
+  "em-dash": "\u2014",
+  "en-dash": "\u2013",
+  "ellipsis": "\u2026",
+  "left-single-quote": "\u2018",
+  "right-single-quote": "\u2019",
+  "left-double-quote": "\u201c",
+  "right-double-quote": "\u201d",
 };
 
 const TEXT_EXTS = new Set([".md", ".mjs", ".js", ".json", ".sh", ".yml", ".yaml"]);
 const SKIP_DIRS = new Set(["node_modules", ".git"]);
+// Fixtures are intentional bad examples (they demonstrate the tells), so they are exempt from the punctuation scan.
+const PUNCT_EXEMPT = join("tests", "fixtures");
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
@@ -31,15 +34,15 @@ function walk(dir, out = []) {
   return out;
 }
 
-function read(rel) {
-  return readFileSync(join(ROOT, rel), "utf8");
+function read(rel, root = ROOT) {
+  return readFileSync(join(root, rel), "utf8");
 }
 
 // --- checks (each returns an array of error strings; empty means pass) ---
 
-export function checkFrontmatter() {
+export function checkFrontmatter(root = ROOT) {
   const errs = [];
-  const src = read("SKILL.md");
+  const src = read("SKILL.md", root);
   if (!src.startsWith("---\n")) {
     errs.push("SKILL.md: missing frontmatter opening ---");
     return errs;
@@ -55,35 +58,34 @@ export function checkFrontmatter() {
   return errs;
 }
 
-export function checkNoAiPunctuation() {
+export function checkNoAiPunctuation(root = ROOT) {
   const errs = [];
-  for (const file of walk(ROOT)) {
-    const ext = file.slice(file.lastIndexOf("."));
-    if (!TEXT_EXTS.has(ext)) continue;
-    if (file === fileURLToPath(import.meta.url)) continue; // this file names the chars by code point only
+  for (const file of walk(root)) {
+    if (!TEXT_EXTS.has(extname(file))) continue;
+    if (relative(root, file).startsWith(PUNCT_EXEMPT)) continue;
     const src = readFileSync(file, "utf8");
     for (const [label, ch] of Object.entries(FORBIDDEN)) {
       const idx = src.indexOf(ch);
       if (idx !== -1) {
         const line = src.slice(0, idx).split("\n").length;
-        errs.push(`${file.replace(ROOT + "/", "")}:${line}: contains ${label}`);
+        errs.push(`${relative(root, file)}:${line}: contains ${label}`);
       }
     }
   }
   return errs;
 }
 
-export function checkLocalLinksResolve() {
+export function checkLocalLinksResolve(root = ROOT) {
   const errs = [];
   const linkRe = /\[[^\]]+\]\(([^)]+)\)/g;
   for (const rel of ["SKILL.md", "README.md", "CONTRIBUTING.md"]) {
-    const src = read(rel);
+    const src = read(rel, root);
     let m;
     while ((m = linkRe.exec(src)) !== null) {
       let target = m[1].trim();
       if (/^https?:\/\//.test(target) || target.startsWith("#")) continue;
       target = target.split("#")[0];
-      if (!existsSync(join(ROOT, target))) errs.push(`${rel}: broken link -> ${target}`);
+      if (!existsSync(join(root, target))) errs.push(`${rel}: broken link -> ${target}`);
     }
   }
   return errs;
@@ -114,10 +116,10 @@ function diffSets(a, b, labelA, labelB) {
   return errs;
 }
 
-export function checkTellsInSync() {
-  const skill = tokensFromTable(read("SKILL.md"));
-  const readme = tokensFromTable(read("README.md"));
-  const examples = tokensFromHeadings(read("references/code-examples.md"));
+export function checkTellsInSync(root = ROOT) {
+  const skill = tokensFromTable(read("SKILL.md", root));
+  const readme = tokensFromTable(read("README.md", root));
+  const examples = tokensFromHeadings(read("references/code-examples.md", root));
   if (skill.size === 0) return ["SKILL.md: no tells found in quick-reference table"];
   return [
     ...diffSets(skill, readme, "SKILL.md", "README.md"),
@@ -125,9 +127,9 @@ export function checkTellsInSync() {
   ];
 }
 
-export function checkFixtures() {
+export function checkFixtures(root = ROOT) {
   const errs = [];
-  const dir = join(ROOT, "tests", "fixtures");
+  const dir = join(root, "tests", "fixtures");
   if (!existsSync(dir)) return errs;
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
@@ -154,14 +156,20 @@ export const CHECKS = {
   fixtures: checkFixtures,
 };
 
-export function runAll() {
+export function runAll(root = ROOT) {
   const results = {};
-  for (const [name, fn] of Object.entries(CHECKS)) results[name] = fn();
+  for (const [name, fn] of Object.entries(CHECKS)) {
+    try {
+      results[name] = fn(root);
+    } catch (err) {
+      results[name] = [`check crashed: ${err.message}`];
+    }
+  }
   return results;
 }
 
 // CLI
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const results = runAll();
   let failed = 0;
   for (const [name, errs] of Object.entries(results)) {

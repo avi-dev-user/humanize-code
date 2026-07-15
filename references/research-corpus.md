@@ -2,7 +2,7 @@
 
 The evidence base behind this skill. Five deep-research rounds, hundreds of sources, 3-vote adversarial verification per claim (a claim needed to survive skeptics actively trying to refute it). Findings are grouped by category. Each carries a confidence level and primary sources.
 
-Use this file when you need the *why* behind a rule, the strength of the evidence, or a citation. For day-to-day work the 14 tells in SKILL.md are enough.
+Use this file when you need the *why* behind a rule, the strength of the evidence, or a citation. For day-to-day work the 16 tells in SKILL.md are enough.
 
 ---
 
