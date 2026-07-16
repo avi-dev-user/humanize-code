@@ -1,8 +1,10 @@
 # humanize-code
 
+[![CI](https://github.com/avi-dev-user/humanize-code/actions/workflows/ci.yml/badge.svg)](https://github.com/avi-dev-user/humanize-code/actions/workflows/ci.yml)
+
 A [Claude Code](https://claude.com/claude-code) skill that reviews code you (or any AI) wrote and strips the "AI tells" so it reads as if a careful senior engineer wrote it.
 
-It is not a linter and not a detector-for-detection's-sake. It is a focused self-review pass: scan a diff, find the recurring patterns that leak "machine-authored", verify each one against the real code, and fix it (or report it for you to fix).
+It is a focused self-review pass, not a linter: scan a diff, find the recurring patterns that leak "machine-authored", verify each one against the real code, and fix it (or report it for you to fix).
 
 ## Why
 

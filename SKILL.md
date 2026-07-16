@@ -9,7 +9,7 @@ license: MIT
 
 Make AI-written code indistinguishable from code a careful senior engineer wrote. This skill scans a diff (or a file/path), finds the recurring "AI smells" that leak through, verifies each one, and fixes it.
 
-The patterns are not folklore. They come from structured research (2024-2026, hundreds of sources, adversarial verification): peer-reviewed papers, large-scale industry code-review data, and official vendor guidance. They are **model-agnostic** and **language-agnostic**, the same tells recur across Opus, Sonnet, GPT, Gemini, Copilot, and others, in every language. See `references/research-corpus.md` for the evidence and citations.
+The patterns come from structured research (2024-2026, hundreds of sources, adversarial verification): peer-reviewed papers, large-scale industry code-review data, and official vendor guidance. They are **model-agnostic** and **language-agnostic**, the same tells recur across Opus, Sonnet, GPT, Gemini, Copilot, and others, in every language. See `references/research-corpus.md` for the evidence and citations.
 
 ## Quick reference
 
