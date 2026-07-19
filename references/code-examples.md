@@ -49,6 +49,30 @@ def add(a, b):
 socket.set_keepalive(25_000)
 ```
 
+**AI (smell) - width-padded section dividers, uniform across the file:**
+```python
+# -- config ---------------------------------------------------------
+DEBUG = False
+
+# -- websocket sync -------------------------------------------------
+def connect(): ...
+
+# -- helpers --------------------------------------------------------
+def clamp(x): ...
+```
+The dashes are counted out to a fixed column on every section, including trivial ones. A human rarely pads to a set width uniformly.
+
+**Human (fix):** let the code group itself, or use one plain label where a section is genuinely large.
+```python
+DEBUG = False
+
+def connect(): ...
+
+def clamp(x): ...
+```
+
+CALIBRATE: a single labeled divider in a long file is fine and human-normal. The tell is uniform, width-padded dividers repeated across the file, especially on short/trivial sections. Do not flag one plain section label.
+
 Rule of thumb: human comments cluster around the hard parts and explain *why*. AI comments are evenly spread and explain *what*.
 
 ---
