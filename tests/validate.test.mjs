@@ -115,3 +115,53 @@ test("runAll reports a crashed check instead of throwing", () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+for (const description of ['description:', 'description: ""', "description: ''", 'description: "   "']) {
+  test(`frontmatter: rejects empty description (${description})`, () => {
+    const root = makeRepo({ "SKILL.md": `---\nname: humanize-code\n${description}\nlicense: MIT\n---\n` });
+    try {
+      assert.ok(checkFrontmatter(root).some(error => error.includes("description")));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+for (const files of [{}, { "tests/fixtures/.gitkeep": "" }]) {
+  test(`fixtures: rejects ${Object.keys(files).length ? "empty" : "missing"} fixture collection`, () => {
+    const root = makeRepo(files);
+    try {
+      assert.ok(checkFixtures(root).length > 0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+for (const phase of ["before", "after"]) {
+  test(`fixtures: rejects ambiguous ${phase} files`, () => {
+    const root = makeRepo({
+      "tests/fixtures/example/before.py": "old\n",
+      "tests/fixtures/example/after.py": "new\n",
+      [`tests/fixtures/example/${phase}.js`]: "alternative\n",
+    });
+    try {
+      assert.ok(checkFixtures(root).some(error => error.includes(phase)));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+test("fixtures: rejects a directory masquerading as a sample file", () => {
+  const root = makeRepo({
+    "tests/fixtures/example/before.py/nested": "old\n",
+    "tests/fixtures/example/after.py": "new\n",
+  });
+  try {
+    const errors = checkFixtures(root);
+    assert.ok(errors.some(error => error.includes("before")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

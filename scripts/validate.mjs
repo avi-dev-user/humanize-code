@@ -1,7 +1,7 @@
 // Structural validator for the humanize-code skill. No LLM needed.
 // Exports pure check functions; run directly (`node scripts/validate.mjs`) for a CLI report.
 // Every check takes an optional repo root so tests can point it at a fixture repo.
-import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -27,7 +27,10 @@ export function checkFrontmatter(root = ROOT) {
   }
   const fm = src.slice(4, end);
   if (!/^name:\s*humanize-code\s*$/m.test(fm)) errs.push("SKILL.md: frontmatter name must be 'humanize-code'");
-  if (!/^description:\s*\S/m.test(fm)) errs.push("SKILL.md: frontmatter missing description");
+  // Read only this line: \s also matches newlines and can consume the next field.
+  const description = fm.match(/^description:[ \t]*(.*)$/m)?.[1].trim();
+  const content = description?.replace(/^(?:"(.*)"|'(.*)')$/, (_, double, single) => double ?? single).trim();
+  if (!content) errs.push("SKILL.md: frontmatter missing or empty description");
   return errs;
 }
 
@@ -86,18 +89,28 @@ export function checkTellsInSync(root = ROOT) {
 export function checkFixtures(root = ROOT) {
   const errs = [];
   const dir = join(root, "tests", "fixtures");
-  if (!existsSync(dir)) return errs;
-  for (const name of readdirSync(dir)) {
+  if (!existsSync(dir)) return ["tests/fixtures: missing fixture directory"];
+  const fixtures = readdirSync(dir, { withFileTypes: true }).filter(entry => entry.isDirectory());
+  if (fixtures.length === 0) return ["tests/fixtures: no fixture pairs found"];
+  for (const { name } of fixtures) {
     const full = join(dir, name);
-    if (!statSync(full).isDirectory()) continue;
-    const files = readdirSync(full);
-    const before = files.find((f) => f.startsWith("before."));
-    const after = files.find((f) => f.startsWith("after."));
-    if (!before) errs.push(`fixture ${name}: missing before.*`);
-    if (!after) errs.push(`fixture ${name}: missing after.*`);
-    if (before && after) {
-      const b = readFileSync(join(full, before), "utf8");
-      const a = readFileSync(join(full, after), "utf8");
+    const entries = readdirSync(full, { withFileTypes: true });
+    const pair = {};
+    for (const phase of ["before", "after"]) {
+      const matches = entries.filter(entry => entry.name.startsWith(`${phase}.`));
+      if (matches.length === 0) {
+        errs.push(`fixture ${name}: missing ${phase}.*`);
+      } else if (matches.length !== 1) {
+        errs.push(`fixture ${name}: expected one ${phase}.* file, found ${matches.length}`);
+      } else if (!matches[0].isFile()) {
+        errs.push(`fixture ${name}: ${matches[0].name} must be a regular file`);
+      } else {
+        pair[phase] = matches[0].name;
+      }
+    }
+    if (pair.before && pair.after) {
+      const b = readFileSync(join(full, pair.before), "utf8");
+      const a = readFileSync(join(full, pair.after), "utf8");
       if (b.trim() === a.trim()) errs.push(`fixture ${name}: before and after are identical`);
     }
   }

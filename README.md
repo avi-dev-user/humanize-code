@@ -80,7 +80,7 @@ The repo ships a validator that runs in CI (no LLM needed):
 npm test
 ```
 
-Requires Node.js 20 or newer and Python 3. Structural checks cover frontmatter, local Markdown file links in the entry documents, pattern-number consistency, and distinct before/after fixtures. Executable examples check counting behavior (including iterators) and authentication error handling. The TypeScript type-escape fixture is illustrative, not compiled. These tests do not prove that an LLM will follow the skill or verify external research sources.
+Requires Node.js 20 or newer and Python 3. Structural checks cover frontmatter, local Markdown file links in the entry documents, pattern-number consistency, and a nonempty fixture collection with exactly one distinct before/after file pair per example. Executable examples check counting behavior (including iterators) and authentication error handling. The TypeScript type-escape fixture is illustrative, not compiled. These tests do not prove that an LLM will follow the skill or verify external research sources.
 
 ## Contributing
 
