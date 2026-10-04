@@ -1,1 +1,1 @@
-print(len(users))
+print(sum(1 for _ in users))

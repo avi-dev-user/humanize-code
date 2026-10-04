@@ -1,8 +1,10 @@
 # Research Corpus: AI-Tells in Code and Text (2024-2026)
 
-The evidence base behind this skill. Five deep-research rounds, hundreds of sources, 3-vote adversarial verification per claim (a claim needed to survive skeptics actively trying to refute it). Findings are grouped by category. Each carries a confidence level and primary sources.
+Historical research notes, retained for traceability. The claims and confidence labels below were recorded by the original research process and have not been re-verified as part of the maintainability revision. They are not operational review rules; follow `SKILL.md` when the historical wording differs.
 
-Use this file when you need the *why* behind a rule, the strength of the evidence, or a citation. For day-to-day work the 16 tells in SKILL.md are enough.
+Original methodology description: Five deep-research rounds, hundreds of sources, 3-vote adversarial verification per claim (a claim needed to survive skeptics actively trying to refute it). Findings are grouped by category. Each carries a confidence level and primary sources.
+
+Use this file to locate candidate sources. Before repeating a claim or statistic, read the primary source and check its scope and limitations. For reviews, require evidence in the actual code, not a population-level authorship claim.
 
 ---
 

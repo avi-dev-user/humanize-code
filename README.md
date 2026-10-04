@@ -8,43 +8,35 @@ It is a focused self-review pass: scan a diff, identify potential maintenance pr
 
 ## Why
 
-Reviews of AI-generated code consistently find higher defect rates, with up to ~89% of the issues being stylistic/structural "code smells" rather than outright bugs, plus elevated rates of specific vulnerabilities. Worse, human reviewers are measurably *less* critical of AI code, because its surface plausibility hides the problems. This skill is the disciplined pass that catches what looks fine on the surface.
+Plausible-looking code can still duplicate logic, hide failures, or rely on incorrect API assumptions. This skill checks those problems against the actual code and project conventions. Its research notes provide background, not a way to classify who wrote a change.
 
-The patterns are model-agnostic and language-agnostic. They come from structured research (2024-2026): peer-reviewed papers, large-scale industry code-review datasets, and official vendor guidance, each claim run through adversarial verification. Sources and confidence levels are in [`references/research-corpus.md`](references/research-corpus.md).
+## Review patterns
 
-## The tells
-
-| # | Tell | One-line fix |
+| # | Pattern | Review guidance |
 |---|------|--------------|
-| 1 | Over-commenting / guide-comments | Delete what-comments; keep short why-comments on the hard parts |
-| 2 | Redundancy / duplication | Dedupe into one helper; reuse what the repo already has |
-| 3 | Defensive bloat | Remove guards the type/flow already guarantees |
-| 3b | Needless type escape (`as any`, `@ts-ignore`) | Use the typed access; if the type is wrong, fix the type |
-| 4 | Silent swallow / catch at wrong altitude | Never bare `catch {}`; narrow the catch, map infra errors honestly |
+| 1 | Over-commenting / guide-comments | Remove redundant narration; preserve contracts and rationale |
+| 2 | Redundancy / duplication | Share logic only when contracts match |
+| 3 | Defensive bloat | Remove guards only after verifying runtime boundaries |
+| 3b | Needless type escape (`as any`, `@ts-ignore`) | Verify runtime and declared types before removing escapes |
+| 4 | Silent swallow / catch at wrong altitude | Preserve intended recovery; distinguish failure causes |
 | 5 | Happy-path bias | Handle the edge/boundary cases that actually exist |
 | 6 | Over-engineering | Collapse to the simplest form that works |
-| 7 | Single-use helper | Inline it at the one call site |
+| 7 | Single-use helper | Inline only when the helper adds no clarity or boundary |
 | 8 | Bipolar naming | Precise, short, one consistent voice |
-| 9 | Internal inconsistency | Mirror the adjacent code exactly |
-| 10 | Dead code / unused imports | Remove them (AI code does leave these) |
+| 9 | Internal inconsistency | Follow local conventions without copying defects |
+| 10 | Dead code / unused imports | Verify side effects and consumers before removal |
 | 11 | Hallucinated APIs | Verify every symbol/param exists |
-| 12 | AI punctuation (em-dash etc.) | Plain hyphen or comma |
-| 13 | AI vocabulary | Plain, direct wording |
-| 14 | Deleted/skipped failing tests | Fix the code, not the test |
-| 15 | Over-testing | Test behavior, not implementation |
-| 16 | Over-structured commit/PR | Short, why-focused, match the repo voice |
+| 12 | Prose style consistency | Follow explicit conventions; preserve meaningful text |
+| 13 | Unclear wording | Improve meaning, not word-blocklist compliance |
+| 14 | Deleted/skipped failing tests | Resolve failures against the intended contract |
+| 15 | Low-value tests | Preserve real regression and boundary coverage |
+| 16 | Unclear commit/PR explanation | Explain purpose, risk, and verification |
 
-Full before/after code for every tell: [`references/code-examples.md`](references/code-examples.md).
-Prose tells (commits, PRs, docs): [`references/text-writing-tells.md`](references/text-writing-tells.md).
+Examples and preconditions: [references/code-examples.md](references/code-examples.md).
+Prose review guidance: [references/text-writing-tells.md](references/text-writing-tells.md).
+Research notes: [references/research-corpus.md](references/research-corpus.md).
 
-## What it deliberately does NOT flag
-
-Chasing these produces false positives, so the skill leaves them alone (all tested and refuted):
-
-- "AI code is unnaturally uniform / lacks personality." Not a discriminator.
-- "AI code is structurally flawless." False, real AI code has mess.
-- Em-dash *frequency* as a detector. Avoiding em-dash is a style choice; frequency does not classify.
-- Precise blog multipliers ("1.7x more issues", "95%/5%"). Most failed verification.
+The skill does not treat punctuation, vocabulary, comment density, or single-use helpers as defects by themselves. Cleanup must preserve behavior; intentional bug fixes must identify and verify the corrected contract. Useful regression and boundary tests stay.
 
 ## Install
 
@@ -74,7 +66,7 @@ In Claude Code:
 /humanize-code src/auth.ts     # scan a specific file or directory
 ```
 
-The skill verifies each finding against the real code before acting, applies fixes to code it just generated, and reports (rather than auto-editing) code you already have. It never commits for you.
+The skill verifies findings against the real code. Review requests produce a report; requests to fix code authorize scoped edits. Reports explain the location, evidence, impact, and verification limits. Commits require a user request.
 
 ### Pin a comment language
 
@@ -88,11 +80,11 @@ The repo ships a validator that runs in CI (no LLM needed):
 npm test
 ```
 
-It checks: valid frontmatter, no AI punctuation anywhere in the repo, every reference link resolves, the tell list in `SKILL.md` and `README.md` stays in sync with `references/code-examples.md`, and every fixture has a distinct before/after pair.
+Requires Node.js 20 or newer and Python 3. Structural checks cover frontmatter, local Markdown file links in the entry documents, pattern-number consistency, and distinct before/after fixtures. Executable examples check counting behavior (including iterators) and authentication error handling. The TypeScript type-escape fixture is illustrative, not compiled. These tests do not prove that an LLM will follow the skill or verify external research sources.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). New tells need a source and should survive the "is this actually a reliable signal, or a false positive?" bar. `npm test` must pass.
+See [CONTRIBUTING.md](CONTRIBUTING.md). New patterns need a concrete failure mode, evidence, and a false-positive check. `npm test` must pass.
 
 ## License
 

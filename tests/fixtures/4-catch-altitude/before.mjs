@@ -1,4 +1,4 @@
-function auth(req: Request, res: Response, next: NextFunction) {
+export async function auth(req, res, next, { decode, db }) {
   try {
     const session = JSON.parse(decode(req.headers.session));
     const user = await db.getUser(session.id);

@@ -7,13 +7,10 @@ import {
   CHECKS,
   runAll,
   checkFrontmatter,
-  checkNoAiPunctuation,
   checkLocalLinksResolve,
   checkTellsInSync,
   checkFixtures,
 } from "../scripts/validate.mjs";
-
-const EM_DASH = String.fromCharCode(0x2014); // injected without putting a literal glyph in this source
 
 // Build a throwaway repo from {relpath: content} and return its root.
 function makeRepo(files) {
@@ -40,7 +37,6 @@ test("CHECKS registry has the expected checks", () => {
     "fixtures",
     "frontmatter",
     "local-links-resolve",
-    "no-ai-punctuation",
     "tells-in-sync",
   ]);
 });
@@ -51,28 +47,6 @@ test("frontmatter: detects missing frontmatter", () => {
   const root = makeRepo({ "SKILL.md": "# no frontmatter here\n" });
   try {
     assert.ok(checkFrontmatter(root).length > 0);
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test("no-ai-punctuation: detects an em-dash", () => {
-  const root = makeRepo({ "doc.md": `a sentence with an ${EM_DASH} in it\n` });
-  try {
-    const errs = checkNoAiPunctuation(root);
-    assert.ok(errs.length > 0 && errs[0].includes("em-dash"), errs.join("\n"));
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test("no-ai-punctuation: exempts tests/fixtures (intentional bad examples)", () => {
-  const root = makeRepo({
-    "doc.md": "clean\n",
-    [join("tests", "fixtures", "x", "before.md")]: `bad ${EM_DASH} example\n`,
-  });
-  try {
-    assert.deepEqual(checkNoAiPunctuation(root), []);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

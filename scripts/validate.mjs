@@ -2,37 +2,10 @@
 // Exports pure check functions; run directly (`node scripts/validate.mjs`) for a CLI report.
 // Every check takes an optional repo root so tests can point it at a fixture repo.
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
-import { join, dirname, resolve, extname, relative } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-
-// Forbidden "AI punctuation", by code point so this source stays free of the glyphs it hunts.
-const FORBIDDEN = {
-  "em-dash": "\u2014",
-  "en-dash": "\u2013",
-  "ellipsis": "\u2026",
-  "left-single-quote": "\u2018",
-  "right-single-quote": "\u2019",
-  "left-double-quote": "\u201c",
-  "right-double-quote": "\u201d",
-};
-
-const TEXT_EXTS = new Set([".md", ".mjs", ".js", ".json", ".sh", ".yml", ".yaml"]);
-const SKIP_DIRS = new Set(["node_modules", ".git"]);
-// Fixtures are intentional bad examples (they demonstrate the tells), so they are exempt from the punctuation scan.
-const PUNCT_EXEMPT = join("tests", "fixtures");
-
-function walk(dir, out = []) {
-  for (const name of readdirSync(dir)) {
-    if (SKIP_DIRS.has(name)) continue;
-    const full = join(dir, name);
-    const st = statSync(full);
-    if (st.isDirectory()) walk(full, out);
-    else out.push(full);
-  }
-  return out;
-}
 
 function read(rel, root = ROOT) {
   return readFileSync(join(root, rel), "utf8");
@@ -55,23 +28,6 @@ export function checkFrontmatter(root = ROOT) {
   const fm = src.slice(4, end);
   if (!/^name:\s*humanize-code\s*$/m.test(fm)) errs.push("SKILL.md: frontmatter name must be 'humanize-code'");
   if (!/^description:\s*\S/m.test(fm)) errs.push("SKILL.md: frontmatter missing description");
-  return errs;
-}
-
-export function checkNoAiPunctuation(root = ROOT) {
-  const errs = [];
-  for (const file of walk(root)) {
-    if (!TEXT_EXTS.has(extname(file))) continue;
-    if (relative(root, file).startsWith(PUNCT_EXEMPT)) continue;
-    const src = readFileSync(file, "utf8");
-    for (const [label, ch] of Object.entries(FORBIDDEN)) {
-      const idx = src.indexOf(ch);
-      if (idx !== -1) {
-        const line = src.slice(0, idx).split("\n").length;
-        errs.push(`${relative(root, file)}:${line}: contains ${label}`);
-      }
-    }
-  }
   return errs;
 }
 
@@ -150,7 +106,6 @@ export function checkFixtures(root = ROOT) {
 
 export const CHECKS = {
   frontmatter: checkFrontmatter,
-  "no-ai-punctuation": checkNoAiPunctuation,
   "local-links-resolve": checkLocalLinksResolve,
   "tells-in-sync": checkTellsInSync,
   fixtures: checkFixtures,
