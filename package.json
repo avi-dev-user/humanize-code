@@ -1,7 +1,7 @@
 {
   "name": "humanize-code",
   "version": "1.0.0",
-  "description": "A Claude Code skill that strips AI-tells from code so it reads as human-authored.",
+  "description": "Review AI-generated code for maintainability, consistency, and common structural code smells.",
   "license": "MIT",
   "author": "avi-dev-user",
   "repository": {

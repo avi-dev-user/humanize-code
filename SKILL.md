@@ -1,13 +1,13 @@
 ---
 name: humanize-code
-description: "Review code you (or any AI) wrote and strip AI-tells so it reads as human-authored by an experienced engineer. Detects and fixes over-commenting, defensive bloat, needless type escapes, over-engineering, single-use helpers, duplicated logic, happy-path bias, hallucinated APIs, bipolar naming, silent/misplaced catches, dead imports, AI punctuation (em-dash) and AI vocabulary. Research-backed (2024-2026). Use before committing, when cleaning AI-generated code, or on demand via /humanize-code."
+description: "Review AI-generated code for maintainability, consistency, and common structural code smells. Use when reviewing or cleaning up AI-generated changes, before a commit, or on demand via /humanize-code."
 argument-hint: "[--diff|--staged|path] (default: current uncommitted changes)"
 license: MIT
 ---
 
 # Humanize Code
 
-Make AI-written code indistinguishable from code a careful senior engineer wrote. This skill scans a diff (or a file/path), finds the recurring "AI smells" that leak through, verifies each one, and fixes it.
+Review code for maintainability, consistency, and common structural code smells. This skill scans a diff (or a file/path), verifies potential issues against the surrounding code, and proposes or applies fixes within the requested scope. Its purpose is code quality, not authorship detection or concealment.
 
 The patterns come from structured research (2024-2026, hundreds of sources, adversarial verification): peer-reviewed papers, large-scale industry code-review data, and official vendor guidance. They are **model-agnostic** and **language-agnostic**, the same tells recur across Opus, Sonnet, GPT, Gemini, Copilot, and others, in every language. See `references/research-corpus.md` for the evidence and citations.
 
@@ -118,4 +118,4 @@ These were explicitly tested and refuted. Chasing them wastes effort and produce
 
 ## Why This Matters
 
-Reviews of AI-generated code find higher defect rates, with up to ~89% of issues being stylistic/structural "code smells" rather than bugs, plus elevated rates of specific vulnerabilities (command injection, hardcoded credentials, XSS). Worse, human reviewers are measurably *less* critical of AI code because its surface plausibility masks the problems. That is why this self-review pass matters: it catches what looks fine on the surface but reads as machine-authored or hides a defect.
+Reviews of AI-generated code find higher defect rates, with up to ~89% of issues being stylistic/structural "code smells" rather than bugs, plus elevated rates of specific vulnerabilities (command injection, hardcoded credentials, XSS). Worse, human reviewers are measurably *less* critical of AI code because its surface plausibility masks the problems. That is why this self-review pass matters: it catches maintenance problems and defects that can look fine on the surface.

@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/avi-dev-user/humanize-code/actions/workflows/ci.yml/badge.svg)](https://github.com/avi-dev-user/humanize-code/actions/workflows/ci.yml)
 
-A [Claude Code](https://claude.com/claude-code) skill that reviews code you (or any AI) wrote and strips the "AI tells" so it reads as if a careful senior engineer wrote it.
+A [Claude Code](https://claude.com/claude-code) skill to review AI-generated code for maintainability, consistency, and common structural code smells. It also works on human-written code.
 
-It is a focused self-review pass, not a linter: scan a diff, find the recurring patterns that leak "machine-authored", verify each one against the real code, and fix it (or report it for you to fix).
+It is a focused self-review pass: scan a diff, identify potential maintenance problems, verify each one against the real code, and fix it (or report it for you to fix). The goal is better code, with no claim about who authored it.
 
 ## Why
 
